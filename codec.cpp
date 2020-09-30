@@ -14,6 +14,8 @@ class Codec {
     private:
         float accuracy;
         uint r;
+        uint d;
+        float p;
         boost::dynamic_bitset<> dec_remainder;
         boost::dynamic_bitset<> polynomial;
         boost::dynamic_bitset<> message;
@@ -21,13 +23,14 @@ class Codec {
         boost::dynamic_bitset<> vector_e;
         boost::dynamic_bitset<> vector_b;
 
-        uint get_index_of_high_1(boost::dynamic_bitset<>); // TODO
+        uint get_index_of_high_1(boost::dynamic_bitset<>);
         void run_sim();
         int init_values(std::string*, uint);
         void encode();
         void decode();
         void send_through_the_channel();
-        bool is_error(); // TODO
+        bool is_error();
+        void up_prob_of_dec_err();
 };
 
 Codec::Codec() {};
@@ -50,6 +53,14 @@ bool Codec::is_error() {
 };
 
 int Codec::init_values(std::string *g_x, uint l) {
+    if (accuracy <= 0 || accuracy > 1) {
+        std::cout << "Wrong accuracy. Please, enter some value in the range 0 < accuracy <= 1.\n\n";
+        return ERROR;
+    }
+    if (p <= 0 || p > 1) {
+        std::cout << "Wrong accuracy. Please, enter some value in the range 0 < accuracy <= 1.\n\n";
+        return ERROR;
+    }
     bool start_null_flag = true;
     for (auto it = g_x->end() - 1; it != g_x->begin(); it--) {
         if (*it != '1' && *it != '0') {
@@ -104,6 +115,23 @@ void Codec::send_through_the_channel() {
     vector_b.operator^=(vector_e);
 };
 
+int factorial(int number) {
+    return (number < 0) ? 0 : ((number < 2) ? 1 : number * factorial(number - 1));
+};
+
+double count_combination(int bottom, int top) {  // n, i
+    return (double)factorial(bottom) / (double)(factorial(bottom - top) * factorial(top));
+};
+
+void Codec::up_prob_of_dec_err() {
+    double prob = 0;
+    uint n = vector_e.size();
+    for (uint i = 0; i < d - 1; i++) {
+        prob += count_combination(n, i) * pow(p, i) * pow(1 - p, n - i);
+    }
+    std::cout << "Upper probability of decoding error: " << prob << "\n";
+};
+
 void Codec::run_sim() {
     uint N = (9 / (4 * pow(accuracy, 2))) + 0.5;
     uint N_err = 0;
@@ -120,6 +148,8 @@ void Codec::run_sim() {
     }
     double P_err = (double)N_err / (double)N;
     std::cout << "Probability of decoding error when transmitting data over a binary-symmetric channel: " << P_err << "\n";
+    
+    up_prob_of_dec_err();
 };
 
 void Codec::start() {
@@ -128,12 +158,16 @@ void Codec::start() {
     std::string g_x;
     uint s_length;
     while (true) {
-        std::cout << "Please, write the generating polynomial: ";
+        std::cout << "Please, write the generating polynomial [g(x)]: ";
         std::cin >> g_x;
-        std::cout << "Please, write the length of the sequence: ";
+        std::cout << "Please, write the length of the sequence [l]: ";
         std::cin >> s_length;
         std::cout << "Please, write the accuracy: ";
         std::cin >> accuracy;
+        std::cout << "Please, write the pobabity of the error [p]: ";
+        std::cin >> p;
+        std::cout << "Please, write the distance of the code [d]: ";
+        std::cin >> d;
         if (init_values(&g_x, s_length) != ERROR)
             run_sim();
 
@@ -143,6 +177,7 @@ void Codec::start() {
             std::cout << "Bye!\n\n";
             break;
         }
+        std::cout << "\n";
     }
 };
 
