@@ -1,57 +1,8 @@
-#include <iostream>
-#include "C:\\Program Files\\mingw-w64\\x86_64-8.1.0-win32-seh-rt_v6-rev0\\mingw64\\lib\\gcc\\x86_64-w64-mingw32\\8.1.0\\include\\c++\\dynamic_bitset.hpp"
-#include <cmath>
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <map>
-
-using namespace std;
+#include "codec.hpp"
 
 #define uint unsigned int
 #define ASCII_OFFSET 48
 #define ERROR 1
-
-int factorial(int number) {
-    return (number < 0) ? 0 : ((number < 2) ? 1 : number * factorial(number - 1));
-};
-
-double count_combination(int bottom, int top) {  // n, i
-    return (double)factorial(bottom) / (double)(factorial(bottom - top) * factorial(top));
-};
-
-class Codec {
-    public:
-        Codec();
-        void start();
-        void greeting();
-
-    private:
-        uint r;
-        uint d;
-        float p;
-        ofstream fout;
-        boost::dynamic_bitset<> dec_remainder;
-        boost::dynamic_bitset<> polynomial;
-        boost::dynamic_bitset<> message;
-        boost::dynamic_bitset<> vector_a;
-        boost::dynamic_bitset<> vector_e;
-        boost::dynamic_bitset<> vector_b;
-        vector<string> data;
-        map<int, int> A_weights; // A <- {key = weight, value = volume}
-
-        boost::dynamic_bitset<> encode(boost::dynamic_bitset<>);
-        uint get_index_of_high_1(boost::dynamic_bitset<>);
-        int init_values(string*, uint);
-        void count_weigth_of_A_words();
-        void send_through_the_channel();
-        void acc_prob_of_dec_err();
-        void up_prob_of_dec_err();
-        void run_sim();
-        void decode();
-        bool is_error();
-};
 
 Codec::Codec() {};
 
@@ -68,7 +19,7 @@ void Codec::count_weigth_of_A_words() {
         else
             A_weights.insert(pair<int, int>(weight, 1));
 
-        for (int i = 0; i < A_word.size(); i++) {
+        for (size_t i = 0; i < A_word.size(); i++) {
             A_word.flip(i);
             if (A_word.test(i))
                 break;
@@ -178,6 +129,15 @@ void Codec::greeting() {
     cout << "------------------------------------------------------------------------------------------------------\n\n";
 };
 
+void Codec::plot() {
+    FILE *gnuplt = popen("gnuplot -persist","w");
+    fprintf(gnuplt, "set title 'Decoding error' font 'Times New Roman, 16'\n");
+    fprintf(gnuplt, "set xlabel 'p'\nset ylabel 'P^'\n");
+    fprintf(gnuplt, "plot 'data.txt' using 1:2 title 'accurate probability' with lines\n");
+    fprintf(gnuplt, "exit\n");
+    pclose(gnuplt);
+};
+
 void Codec::start() {
     greeting();
     fout.open("data.txt", ios_base::out);
@@ -210,12 +170,7 @@ void Codec::start() {
         cout << "\n";   
     }
     fout.close();
-};
-
-int main(int argc, char **argv) {
-    Codec codec;
-    codec.start();
-    return 0;
+    plot();
 };
 
 // run_sim
