@@ -14,10 +14,14 @@ void Codec::count_weigth_of_A_words() {
             tmp.push_back(0);
         int weight = encode(tmp).count();
 
-        if (A_weights.find(weight) != A_weights.end())
+        cout << encode(tmp) << "\n";
+
+        if (A_weights.find(weight) != A_weights.end()) {
             A_weights.at(weight)++;
-        else
+        }
+        else {
             A_weights.insert(pair<int, int>(weight, 1));
+        }
 
         for (size_t i = 0; i < A_word.size(); i++) {
             A_word.flip(i);
@@ -25,6 +29,8 @@ void Codec::count_weigth_of_A_words() {
                 break;
         }
     }
+    for (auto it = A_weights.begin(); it != A_weights.end(); it++)
+        cout << it->first <<  " : " << it->second << "\n";
 }
 
 uint Codec::get_index_of_high_1(boost::dynamic_bitset<> b_s) {
@@ -95,7 +101,6 @@ void Codec::send_through_the_channel() {
 };
 
 void Codec::acc_prob_of_dec_err() {
-    count_weigth_of_A_words();
     double P_err = 0.0;
     int n = vector_a.size();
     for (int i = d; i <= n; i++)
@@ -114,10 +119,10 @@ void Codec::up_prob_of_dec_err() {
 };
 
 void Codec::run_sim() {
+    count_weigth_of_A_words();
     for (p = 0; p <= 1; p += 0.01) {
         acc_prob_of_dec_err();
         up_prob_of_dec_err();
-        A_weights.clear();
     }
     for (auto it = data.begin(); it != data.end(); it++) {
         fout << *it << "\n";
